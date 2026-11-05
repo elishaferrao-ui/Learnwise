@@ -1,14 +1,25 @@
 
 import streamlit as st
 
+# --------------------------------
+# 1. PAGE SETTINGS
+# --------------------------------
+
 st.set_page_config(
     page_title="LEARNWISE",
     page_icon="📚",
     layout="centered"
 )
 
+# --------------------------------
+# 2. WELCOME SCREEN
+# --------------------------------
+
 st.title("📚 LEARNWISE")
-st.subheader("Understand what you learn. Discover what needs practice.")
+
+st.subheader(
+    "Understand what you learn. Discover what needs practice."
+)
 
 st.write(
     "LEARNWISE helps students identify concepts "
@@ -17,7 +28,9 @@ st.write(
 
 st.divider()
 
-# STUDENT DETAILS
+# --------------------------------
+# 3. STUDENT DETAILS
+# --------------------------------
 
 st.header("Student details")
 
@@ -28,8 +41,9 @@ grade = st.selectbox(
     ["Grade 6", "Grade 7", "Grade 8", "Grade 9"]
 )
 
-# QUESTION BANK
-# Every question is linked to a specific concept.
+# --------------------------------
+# 4. QUESTION BANK
+# --------------------------------
 
 questions = [
     {
@@ -41,7 +55,8 @@ questions = [
             "There is no gravity",
             "The book has no weight"
         ],
-        "answer": "The forces are balanced"
+        "answer": "The forces are balanced",
+        "explanation": "The book is at rest. Its weight acts downwards and the support force from the table acts upwards. These forces balance each other."
     },
     {
         "concept": "Balanced forces",
@@ -52,7 +67,8 @@ questions = [
             "The forces are balanced",
             "The rope disappears"
         ],
-        "answer": "The forces are balanced"
+        "answer": "The forces are balanced",
+        "explanation": "Equal forces acting in opposite directions have a zero resultant force."
     },
     {
         "concept": "Unbalanced forces",
@@ -63,7 +79,8 @@ questions = [
             "Its mass becomes zero",
             "Gravity disappears"
         ],
-        "answer": "It starts moving"
+        "answer": "It starts moving",
+        "explanation": "The kick applies an unbalanced force that changes the football's state of motion."
     },
     {
         "concept": "Unbalanced forces",
@@ -74,7 +91,8 @@ questions = [
             "Remove its mass",
             "Destroy its weight"
         ],
-        "answer": "Change its state of motion"
+        "answer": "Change its state of motion",
+        "explanation": "An unbalanced force can change an object's speed, direction or state of motion."
     },
     {
         "concept": "Friction",
@@ -85,7 +103,8 @@ questions = [
             "Always downwards",
             "In the direction of motion"
         ],
-        "answer": "Opposite to motion or attempted motion"
+        "answer": "Opposite to motion or attempted motion",
+        "explanation": "Friction opposes relative motion or the tendency of surfaces to move relative to each other."
     },
     {
         "concept": "Friction",
@@ -96,31 +115,45 @@ questions = [
             "Mass increases",
             "Gravity increases"
         ],
-        "answer": "Friction decreases"
+        "answer": "Friction decreases",
+        "explanation": "Lubricants reduce friction between surfaces by making it easier for them to move against each other."
     }
 ]
 
-# START ASSESSMENT
+# --------------------------------
+# 5. START ASSESSMENT
+# --------------------------------
 
 if st.button("Start assessment"):
+
     if student_name.strip():
         st.session_state.started = True
     else:
         st.warning("Please enter your name first.")
 
-# DISPLAY QUESTIONS
+# --------------------------------
+# 6. DISPLAY QUESTIONS
+# --------------------------------
 
 if st.session_state.get("started", False):
 
     st.divider()
+
     st.header("📝 Science Assessment")
-    st.write(f"Student: {student_name} | Grade: {grade}")
+
+    st.write(f"Student: {student_name}")
+    st.write(f"Grade: {grade}")
+
     st.write("Choose one answer for every question.")
 
     with st.form("science_assessment"):
 
         for i, q in enumerate(questions):
-            st.markdown(f"**Question {i + 1}: {q['concept']}**")
+
+            st.markdown(
+                f"**Question {i + 1}: {q['concept']}**"
+            )
+
             st.write(q["question"])
 
             st.radio(
@@ -129,7 +162,13 @@ if st.session_state.get("started", False):
                 key=f"question_{i}"
             )
 
-        submitted = st.form_submit_button("Submit assessment")
+        submitted = st.form_submit_button(
+            "Submit assessment"
+        )
+
+    # --------------------------------
+    # 7. CHECK ANSWERS AND CALCULATE SCORES
+    # --------------------------------
 
     if submitted:
 
@@ -140,7 +179,9 @@ if st.session_state.get("started", False):
         ]
 
         if unanswered:
+
             st.warning("Please answer all six questions.")
+
         else:
 
             scores = {
@@ -149,17 +190,39 @@ if st.session_state.get("started", False):
                 "Friction": [0, 0]
             }
 
+            mistakes = []
+
             for i, q in enumerate(questions):
+
+                selected = st.session_state[f"question_{i}"]
+
                 scores[q["concept"]][1] += 1
 
-                if st.session_state[f"question_{i}"] == q["answer"]:
+                if selected == q["answer"]:
+
                     scores[q["concept"]][0] += 1
+
+                else:
+
+                    mistakes.append({
+                        "number": i + 1,
+                        "concept": q["concept"],
+                        "question": q["question"],
+                        "selected": selected,
+                        "correct": q["answer"],
+                        "explanation": q["explanation"]
+                    })
 
             total_correct = sum(
                 score[0] for score in scores.values()
             )
 
+            # --------------------------------
+            # 8. LEARNING REPORT
+            # --------------------------------
+
             st.divider()
+
             st.header("📊 Your Learning Report")
 
             st.metric(
@@ -173,17 +236,73 @@ if st.session_state.get("started", False):
 
                 correct, total = score
 
-                st.write(f"**{concept}: {correct}/{total}**")
+                st.write(
+                    f"**{concept}: {correct}/{total}**"
+                )
 
                 if correct == total:
-                    st.success("Good understanding. Keep practising!")
-                else:
-                    st.warning(
-                        "This concept needs more revision and practice."
+
+                    st.success(
+                        "Good understanding. Keep practising!"
                     )
 
-            st.info(
-                "This report identifies concepts to review. "
-                "It does not diagnose the reason for an incorrect answer."
+                else:
+
+                    st.warning(
+                        "This concept needs more revision."
+                    )
+
+            # --------------------------------
+            # 9. MISTAKE REVIEW
+            # --------------------------------
+
+            st.divider()
+
+            st.header("🔍 Mistake Review")
+
+            if mistakes:
+
+                st.write(
+                    "Let's understand the questions you "
+                    "answered incorrectly."
+                )
+
+                for mistake in mistakes:
+
+                    with st.expander(
+                        f"Question {mistake['number']}: "
+                        f"{mistake['concept']}"
+                    ):
+
+                        st.write(mistake["question"])
+
+                        st.error(
+                            f"Your answer: {mistake['selected']}"
+                        )
+
+                        st.success(
+                            f"Correct answer: {mistake['correct']}"
+                        )
+
+                        st.markdown("**Why is this correct?**")
+
+                        st.write(mistake["explanation"])
+
+                        st.info(
+                            f"Learning tip: Revise "
+                            f"{mistake['concept']} and try "
+                            f"a similar question."
+                        )
+
+            else:
+
+                st.success(
+                    "Excellent! You answered every "
+                    "question correctly."
+                )
+
+            st.caption(
+                "LEARNWISE identifies concepts to review. "
+                "It does not assume why a student made a mistake."
             )
             
